@@ -5,6 +5,7 @@ import org.example.model.GraphModel;
 import org.example.model.Node;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.util.List;
 
 public class GraphRenderer {
     private NodeRenderer nodeRenderer;
@@ -16,14 +17,29 @@ public class GraphRenderer {
     }
 
     public void render(Graphics2D g2d, GraphModel graph, Node selectedNode) {
+        render(g2d, graph, selectedNode, null);
+    }
+
+    public void render(Graphics2D g2d, GraphModel graph, Node selectedNode, List<Node> highlightedPath) {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         for (Edge edge : graph.getEdges()) {
-            edgeRenderer.draw(g2d, edge, graph.isDirected());
+            boolean highlight = false;
+            if (highlightedPath != null && highlightedPath.size() > 1) {
+                for (int i = 0; i < highlightedPath.size() - 1; i++) {
+                    if (edge.getFrom().equals(highlightedPath.get(i)) &&
+                        edge.getTo().equals(highlightedPath.get(i + 1))) {
+                        highlight = true;
+                        break;
+                    }
+                }
+            }
+            edgeRenderer.draw(g2d, edge, graph.isDirected(), highlight);
         }
 
         for (Node node : graph.getNodes()) {
-            nodeRenderer.draw(g2d, node, node == selectedNode);
+            boolean highlight = highlightedPath != null && highlightedPath.contains(node);
+            nodeRenderer.draw(g2d, node, node == selectedNode, highlight);
         }
     }
 }

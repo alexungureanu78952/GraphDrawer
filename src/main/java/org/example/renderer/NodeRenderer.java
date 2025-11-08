@@ -8,12 +8,19 @@ import java.awt.Graphics2D;
 public class NodeRenderer {
     private static final Color NODE_COLOR = Color.WHITE;
     private static final Color SELECTED_COLOR = Color.YELLOW;
+    private static final Color HIGHLIGHTED_COLOR = Color.CYAN;
     private static final Color BORDER_COLOR = Color.GRAY;
 
     public void draw(Graphics2D g2d, Node node, boolean isSelected) {
+        draw(g2d, node, isSelected, false);
+    }
+
+    public void draw(Graphics2D g2d, Node node, boolean isSelected, boolean isHighlighted) {
         int radius = Node.getRadius();
 
-        if (isSelected) {
+        if (isHighlighted) {
+            g2d.setColor(HIGHLIGHTED_COLOR);
+        } else if (isSelected) {
             g2d.setColor(SELECTED_COLOR);
         } else {
             g2d.setColor(NODE_COLOR);

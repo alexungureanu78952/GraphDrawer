@@ -7,6 +7,7 @@ import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JPanel;
+import javax.swing.JOptionPane;
 
 public class MouseController extends MouseAdapter {
     private final GraphModel graph;
@@ -31,6 +32,8 @@ public class MouseController extends MouseAdapter {
 
     @Override
     public void mousePressed(MouseEvent e) {
+        panel.requestFocusInWindow();
+
         Node clickedNode = graph.getNodeAt(e.getX(), e.getY());
 
         if (e.getButton() == MouseEvent.BUTTON1) {
@@ -74,8 +77,18 @@ public class MouseController extends MouseAdapter {
                         selectedNode = null;
                         panel.repaint();
                     } else {
-                        if (graph.addEdge(selectedNode, clickedNode)) {
-                            fileManager.saveGraph(graph);
+                        String costStr = JOptionPane.showInputDialog(panel, "Introduceti costul arcului:", "1");
+                        if (costStr != null) {
+                            try {
+                                int cost = Integer.parseInt(costStr);
+                                if (graph.addEdge(selectedNode, clickedNode, cost)) {
+                                    fileManager.saveGraph(graph);
+                                }
+                            } catch (NumberFormatException ex) {
+                                if (graph.addEdge(selectedNode, clickedNode)) {
+                                    fileManager.saveGraph(graph);
+                                }
+                            }
                         }
                         selectedNode = null;
                         panel.repaint();

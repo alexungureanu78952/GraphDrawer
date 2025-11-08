@@ -56,6 +56,27 @@ public class GraphModel {
         return true;
     }
 
+    public boolean addEdge(Node from, Node to, int cost) {
+        if (from == to) {
+            return false;
+        }
+
+        for (Edge e : edges) {
+            if (isDirected) {
+                if (e.connectsDirected(from, to)) {
+                    return false;
+                }
+            } else {
+                if (e.connects(from, to)) {
+                    return false;
+                }
+            }
+        }
+
+        edges.add(new Edge(from, to, cost));
+        return true;
+    }
+
     public Node getNodeAt(int x, int y) {
         for (Node n : nodes) {
             if (n.contains(x, y)) {
