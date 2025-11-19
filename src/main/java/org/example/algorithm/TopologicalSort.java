@@ -12,94 +12,90 @@ public class TopologicalSort {
     }
 
     public List<Node> sort() {
-        if (!graph.isDirected()) {
-            return null;
-        }
+        if (!graph.isDirected()) return null;
 
-        List<Node> order = new ArrayList<>();
         Map<Node, Integer> state = new HashMap<>();
+        List<Node> sorted = new ArrayList<>();
         for (Node n : graph.getNodes()) state.put(n, 0);
 
-        Stack<Node> stack = new Stack<>();
-        Map<Node, Integer> nextIndex = new HashMap<>();
-        Set<Node> pushed = new HashSet<>();
-
-        for (Node start : graph.getNodes()) {
-            if (state.getOrDefault(start, 0) != 0) continue;
-
-            stack.clear();
-            nextIndex.clear();
-            pushed.clear();
-            stack.push(start);
-            pushed.add(start);
-
-            while (!stack.isEmpty()) {
-                Node v = stack.peek();
-                int st = state.getOrDefault(v, 0);
-                if (st == 0) {
-                    state.put(v, 1);
-                    nextIndex.put(v, 0);
-                }
-
-                List<Node> succ = graph.getSuccessors(v);
-                int idx = nextIndex.getOrDefault(v, 0);
-                if (idx < succ.size()) {
-                    Node s = succ.get(idx);
-                    nextIndex.put(v, idx + 1);
-                    int sstate = state.getOrDefault(s, 0);
-                    if (sstate == 0 && !pushed.contains(s)) {
-                        stack.push(s);
-                        pushed.add(s);
-                    } else if (sstate == 1) {
-                        return null;
-                    }
-                } else {
-                    state.put(v, 2);
-                    stack.pop();
-                    order.add(v);
-                }
+        for (Node n : graph.getNodes()) {
+            if (state.get(n) == 0) {
+                if (!dfsIterative(n, state, sorted)) return null;
             }
         }
 
-        Collections.reverse(order);
-        return order;
+        Collections.reverse(sorted);
+        return sorted;
+    }
+
+    private boolean dfsIterative(Node start, Map<Node, Integer> state, List<Node> sorted) {
+        Stack<Node> processingStack = new Stack<>();
+        Stack<Integer> phaseStack = new Stack<>();
+        Set<Node> pushed = new HashSet<>();
+
+        processingStack.push(start);
+        phaseStack.push(0);
+        pushed.add(start);
+
+        while (!processingStack.isEmpty()) {
+            Node current = processingStack.pop();
+            int phase = phaseStack.pop();
+
+            if (phase == 0) {
+                if (state.getOrDefault(current, 0) == 2) continue;
+                if (state.getOrDefault(current, 0) == 1) return false;
+
+                state.put(current, 1);
+
+                processingStack.push(current);
+                phaseStack.push(1);
+
+                List<Node> successors = graph.getSuccessors(current);
+                for (int i = successors.size() - 1; i >= 0; i--) {
+                    Node s = successors.get(i);
+                    int sstate = state.getOrDefault(s, 0);
+                    if (sstate == 1) return false;
+                    if (sstate == 0 && !pushed.contains(s)) {
+                        processingStack.push(s);
+                        phaseStack.push(0);
+                        pushed.add(s);
+                    }
+                }
+            } else {
+                state.put(current, 2);
+                sorted.add(current);
+            }
+        }
+
+        return true;
     }
 
     public boolean hasCycle() {
-        return !nodesInCycle().isEmpty();
-    }
+        if (!graph.isDirected()) return false;
 
-    public List<Node> nodesInCycle() {
-        if (!graph.isDirected()) return Collections.emptyList();
+        List<Node> nodeList = new ArrayList<>(graph.getNodes());
+        Map<Node, Integer> indegreeMap = new HashMap<>();
+        for (Node node : nodeList) indegreeMap.put(node, 0);
+        for (Node from : nodeList) {
+            List<Node> successors = graph.getSuccessors(from);
+            if (successors == null) continue;
+            for (Node successor : successors) indegreeMap.put(successor, indegreeMap.getOrDefault(successor, 0) + 1);
+        }
 
-        List<Node> nodes = new ArrayList<>(graph.getNodes());
-        Map<Node, Integer> indegree = new HashMap<>();
-        for (Node n : nodes) indegree.put(n, 0);
-        for (Node u : nodes) {
-            for (Node v : graph.getSuccessors(u)) {
-                indegree.put(v, indegree.getOrDefault(v, 0) + 1);
+        Deque<Node> zeroIndegreeQueue = new ArrayDeque<>();
+        for (Node node : nodeList) if (indegreeMap.getOrDefault(node, 0) == 0) zeroIndegreeQueue.addLast(node);
+
+        int processedCount = 0;
+        while (!zeroIndegreeQueue.isEmpty()) {
+            Node current = zeroIndegreeQueue.removeFirst();
+            processedCount++;
+            for (Node successor : graph.getSuccessors(current)) {
+                int newIndegree = indegreeMap.getOrDefault(successor, 0) - 1;
+                indegreeMap.put(successor, newIndegree);
+                if (newIndegree == 0) zeroIndegreeQueue.addLast(successor);
             }
         }
 
-        Deque<Node> q = new ArrayDeque<>();
-        for (Node n : nodes) if (indegree.getOrDefault(n,0) == 0) q.addLast(n);
-
-        List<Node> order = new ArrayList<>();
-        while (!q.isEmpty()) {
-            Node u = q.removeFirst();
-            order.add(u);
-            for (Node v : graph.getSuccessors(u)) {
-                int d = indegree.getOrDefault(v,0) - 1;
-                indegree.put(v, d);
-                if (d == 0) q.addLast(v);
-            }
-        }
-
-        if (order.size() == nodes.size()) return Collections.emptyList();
-
-        Set<Node> processed = new HashSet<>(order);
-        List<Node> inCycle = new ArrayList<>();
-        for (Node n : nodes) if (!processed.contains(n)) inCycle.add(n);
-        return inCycle;
+        return processedCount != nodeList.size();
     }
 }

@@ -11,7 +11,7 @@ public class GraphModel {
     private final ArrayList<Edge> edges;
     private int nextId;
     private boolean isDirected;
-    private Map<Node, List<Edge>> outgoing;
+    private final Map<Node, List<Edge>> outgoing;
 
     public GraphModel(boolean isDirected) {
         nodes = new ArrayList<>();
@@ -161,20 +161,10 @@ public class GraphModel {
             Node from = e.getFrom();
             Node to = e.getTo();
             if (from == null || to == null) continue;
-            List<Edge> list = outgoing.get(from);
-            if (list == null) {
-                list = new ArrayList<>();
-                outgoing.put(from, list);
-            }
-            list.add(e);
+            outgoing.computeIfAbsent(from, k -> new ArrayList<>()).add(e);
             if (!isDirected) {
                 Edge reverse = new Edge(to, from, e.getCost());
-                List<Edge> list2 = outgoing.get(to);
-                if (list2 == null) {
-                    list2 = new ArrayList<>();
-                    outgoing.put(to, list2);
-                }
-                list2.add(reverse);
+                outgoing.computeIfAbsent(to, k -> new ArrayList<>()).add(reverse);
             }
         }
     }
