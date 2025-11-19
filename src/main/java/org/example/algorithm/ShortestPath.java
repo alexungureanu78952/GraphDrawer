@@ -39,19 +39,22 @@ public class ShortestPath {
         for (int k = startIndex; k < topologicalOrder.size(); k++) {
             Node i = topologicalOrder.get(k);
 
-            if (distances.get(i) == Integer.MAX_VALUE) {
+            Integer distIobj = distances.get(i);
+            if (distIobj == null || distIobj == Integer.MAX_VALUE) {
                 continue;
             }
+            long distI = distIobj.longValue();
 
-            for (Edge edge : graph.getEdges()) {
-                if (edge.getFrom().equals(i)) {
-                    Node j = edge.getTo();
-                    int newDist = distances.get(i) + edge.getCost();
+            List<Edge> outs = graph.getOutgoingEdges(i);
+            for (Edge edge : outs) {
+                Node j = edge.getTo();
+                long newDistLong = distI + (long) edge.getCost();
+                int currentJ = distances.getOrDefault(j, Integer.MAX_VALUE);
+                long currentJLong = (currentJ == Integer.MAX_VALUE) ? Long.MAX_VALUE : (long) currentJ;
 
-                    if (newDist < distances.get(j)) {
-                        distances.put(j, newDist);
-                        predecessors.put(j, i);
-                    }
+                if (newDistLong < currentJLong && newDistLong <= Integer.MAX_VALUE) {
+                    distances.put(j, (int) newDistLong);
+                    predecessors.put(j, i);
                 }
             }
         }
@@ -64,7 +67,7 @@ public class ShortestPath {
             return null;
         }
 
-        List<Node> path = new ArrayList<>();
+        LinkedList<Node> path = new LinkedList<>();
         Node current = target;
 
         while (current != null) {

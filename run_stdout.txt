@@ -1,0 +1,4 @@
+nodes created: 0, 1, 2
+added edges: 0->1=true 1->2=true 0->2=true
+hasCycle() = false
+order: 0 1 2 

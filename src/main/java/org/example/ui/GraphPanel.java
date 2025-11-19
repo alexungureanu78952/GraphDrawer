@@ -5,7 +5,6 @@ import org.example.controller.MouseController;
 import org.example.controller.KeyboardController;
 import org.example.io.FileManager;
 import org.example.renderer.GraphRenderer;
-import org.example.model.Node;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -13,10 +12,10 @@ import java.awt.Font;
 import javax.swing.JPanel;
 
 public class GraphPanel extends JPanel {
-    private GraphModel graph;
-    private GraphRenderer renderer;
-    private MouseController mouseController;
-    private KeyboardController keyboardController;
+    private final GraphModel graph;
+    private final GraphRenderer renderer;
+    private final MouseController mouseController;
+    private final KeyboardController keyboardController;
 
     public GraphPanel(GraphModel graph, FileManager fileManager) {
         this.graph = graph;

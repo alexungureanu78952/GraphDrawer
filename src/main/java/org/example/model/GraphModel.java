@@ -2,22 +2,28 @@ package org.example.model;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class GraphModel {
     private final ArrayList<Node> nodes;
     private final ArrayList<Edge> edges;
     private int nextId;
     private boolean isDirected;
+    private Map<Node, List<Edge>> outgoing;
 
     public GraphModel(boolean isDirected) {
         nodes = new ArrayList<>();
         edges = new ArrayList<>();
         nextId = 0;
         this.isDirected = isDirected;
+        this.outgoing = new HashMap<>();
     }
 
     public void setDirected(boolean directed) {
         this.isDirected = directed;
+        rebuildOutgoing();
     }
 
     public boolean isDirected() {
@@ -32,10 +38,14 @@ public class GraphModel {
             }
         }
         nodes.add(newNode);
+        rebuildOutgoing();
         return newNode;
     }
 
     public boolean addEdge(Node from, Node to) {
+        if (from == null || to == null) {
+            return false;
+        }
         if (from == to) {
             return false;
         }
@@ -53,10 +63,14 @@ public class GraphModel {
         }
 
         edges.add(new Edge(from, to));
+        rebuildOutgoing();
         return true;
     }
 
     public boolean addEdge(Node from, Node to, int cost) {
+        if (from == null || to == null) {
+            return false;
+        }
         if (from == to) {
             return false;
         }
@@ -74,6 +88,7 @@ public class GraphModel {
         }
 
         edges.add(new Edge(from, to, cost));
+        rebuildOutgoing();
         return true;
     }
 
@@ -109,7 +124,9 @@ public class GraphModel {
 
         return matrix;
     }
+
     public boolean removeAllEdgesFromNode(Node node) {
+        if (node == null) return false;
         boolean removed = false;
 
         Iterator<Edge> iterator = edges.iterator();
@@ -128,6 +145,49 @@ public class GraphModel {
             }
         }
 
+        if (removed) {
+            rebuildOutgoing();
+        }
+
         return removed;
+    }
+
+    private void rebuildOutgoing() {
+        outgoing.clear();
+        for (Node n : nodes) {
+            outgoing.put(n, new ArrayList<>());
+        }
+        for (Edge e : edges) {
+            Node from = e.getFrom();
+            Node to = e.getTo();
+            if (from == null || to == null) continue;
+            List<Edge> list = outgoing.get(from);
+            if (list == null) {
+                list = new ArrayList<>();
+                outgoing.put(from, list);
+            }
+            list.add(e);
+            if (!isDirected) {
+                Edge reverse = new Edge(to, from, e.getCost());
+                List<Edge> list2 = outgoing.get(to);
+                if (list2 == null) {
+                    list2 = new ArrayList<>();
+                    outgoing.put(to, list2);
+                }
+                list2.add(reverse);
+            }
+        }
+    }
+
+    public List<Edge> getOutgoingEdges(Node node) {
+        return outgoing.getOrDefault(node, new ArrayList<>());
+    }
+
+    public List<Node> getSuccessors(Node node) {
+        List<Node> succ = new ArrayList<>();
+        for (Edge e : getOutgoingEdges(node)) {
+            succ.add(e.getTo());
+        }
+        return succ;
     }
 }
