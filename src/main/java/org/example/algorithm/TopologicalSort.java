@@ -52,9 +52,6 @@ public class TopologicalSort {
                 if (state.get(current) == 2) {
                     continue;
                 }
-                if (state.get(current) == 1) {
-                    return false;
-                }
 
                 state.put(current, 1);
 
@@ -69,6 +66,7 @@ public class TopologicalSort {
                         return false;
                     }
                     if (successorState == 0) {
+                        state.put(successor, 1);
                         processingStack.push(successor);
                         phaseStack.push(0);
                     }

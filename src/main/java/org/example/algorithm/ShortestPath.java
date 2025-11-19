@@ -32,6 +32,9 @@ public class ShortestPath {
         distances.put(source, 0);
 
         int startIndex = topologicalOrder.indexOf(source);
+        if (startIndex == -1) {
+            return false;
+        }
 
         for (int k = startIndex; k < topologicalOrder.size(); k++) {
             Node i = topologicalOrder.get(k);
@@ -65,7 +68,7 @@ public class ShortestPath {
         Node current = target;
 
         while (current != null) {
-            path.add(0, current);
+            path.addFirst(current);
             current = predecessors.get(current);
         }
 

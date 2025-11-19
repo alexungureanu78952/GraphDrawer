@@ -29,6 +29,15 @@ public class GraphPanel extends JPanel {
         addMouseMotionListener(mouseController);
         addKeyListener(keyboardController);
         setFocusable(true);
+        setFocusTraversalKeysEnabled(false);
+        requestFocusInWindow();
+    }
+
+    @Override
+    public void addNotify() {
+        super.addNotify();
+        setFocusable(true);
+        setFocusTraversalKeysEnabled(false);
         requestFocusInWindow();
     }
 
