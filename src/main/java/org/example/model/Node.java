@@ -5,11 +5,13 @@ public class Node {
     private int x;
     private int y;
     private static final int RADIUS = 25;
+    private String customLabel;
 
     public Node(int id, int x, int y) {
         this.id = id;
         this.x = x;
         this.y = y;
+        this.customLabel = null;
     }
 
     public int getId() {
@@ -47,5 +49,17 @@ public class Node {
         int dy = y - other.y;
         int minDist = 2 * RADIUS + 10;
         return dx * dx + dy * dy < minDist * minDist;
+    }
+
+    public String getCustomLabel() {
+        return customLabel;
+    }
+
+    public void setCustomLabel(String customLabel) {
+        this.customLabel = customLabel;
+    }
+
+    public String getDisplayLabel() {
+        return customLabel != null ? customLabel : String.valueOf(id);
     }
 }

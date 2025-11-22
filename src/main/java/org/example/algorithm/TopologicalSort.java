@@ -69,33 +69,4 @@ public class TopologicalSort {
 
         return true;
     }
-
-    public boolean hasCycle() {
-        if (!graph.isDirected()) return false;
-
-        List<Node> nodeList = new ArrayList<>(graph.getNodes());
-        Map<Node, Integer> indegreeMap = new HashMap<>();
-        for (Node node : nodeList) indegreeMap.put(node, 0);
-        for (Node from : nodeList) {
-            List<Node> successors = graph.getSuccessors(from);
-            if (successors == null) continue;
-            for (Node successor : successors) indegreeMap.put(successor, indegreeMap.getOrDefault(successor, 0) + 1);
-        }
-
-        Deque<Node> zeroIndegreeQueue = new ArrayDeque<>();
-        for (Node node : nodeList) if (indegreeMap.getOrDefault(node, 0) == 0) zeroIndegreeQueue.addLast(node);
-
-        int processedCount = 0;
-        while (!zeroIndegreeQueue.isEmpty()) {
-            Node current = zeroIndegreeQueue.removeFirst();
-            processedCount++;
-            for (Node successor : graph.getSuccessors(current)) {
-                int newIndegree = indegreeMap.getOrDefault(successor, 0) - 1;
-                indegreeMap.put(successor, newIndegree);
-                if (newIndegree == 0) zeroIndegreeQueue.addLast(successor);
-            }
-        }
-
-        return processedCount != nodeList.size();
-    }
 }

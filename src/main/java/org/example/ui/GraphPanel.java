@@ -44,7 +44,8 @@ public class GraphPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-        renderer.render(g2d, graph, mouseController.getSelectedNode(), keyboardController.getCurrentPath());
+
+        renderer.render(g2d, graph, mouseController.getSelectedNode(), keyboardController.getCurrentPath(), keyboardController.getComponentColors());
 
         drawInstructions(g2d);
     }

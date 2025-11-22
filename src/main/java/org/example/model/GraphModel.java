@@ -12,6 +12,7 @@ public class GraphModel {
     private int nextId;
     private boolean isDirected;
     private final Map<Node, List<Edge>> outgoing;
+    private final Map<Node, List<Node>> successors;
 
     public GraphModel(boolean isDirected) {
         nodes = new ArrayList<>();
@@ -19,6 +20,7 @@ public class GraphModel {
         nextId = 0;
         this.isDirected = isDirected;
         this.outgoing = new HashMap<>();
+        this.successors = new HashMap<>();
     }
 
     public void setDirected(boolean directed) {
@@ -154,17 +156,21 @@ public class GraphModel {
 
     private void rebuildOutgoing() {
         outgoing.clear();
+        successors.clear();
         for (Node n : nodes) {
             outgoing.put(n, new ArrayList<>());
+            successors.put(n, new ArrayList<>());
         }
         for (Edge e : edges) {
             Node from = e.getFrom();
             Node to = e.getTo();
             if (from == null || to == null) continue;
             outgoing.computeIfAbsent(from, k -> new ArrayList<>()).add(e);
+            successors.computeIfAbsent(from, k -> new ArrayList<>()).add(to);
             if (!isDirected) {
                 Edge reverse = new Edge(to, from, e.getCost());
                 outgoing.computeIfAbsent(to, k -> new ArrayList<>()).add(reverse);
+                successors.computeIfAbsent(to, k -> new ArrayList<>()).add(from);
             }
         }
     }
@@ -174,10 +180,6 @@ public class GraphModel {
     }
 
     public List<Node> getSuccessors(Node node) {
-        List<Node> succ = new ArrayList<>();
-        for (Edge e : getOutgoingEdges(node)) {
-            succ.add(e.getTo());
-        }
-        return succ;
+        return successors.getOrDefault(node, new ArrayList<>());
     }
 }

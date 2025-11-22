@@ -2,6 +2,7 @@ package org.example.controller;
 
 import org.example.algorithm.ShortestPath;
 import org.example.algorithm.TopologicalSort;
+import org.example.algorithm.ConnectedComponents;
 import org.example.model.GraphModel;
 import org.example.model.Node;
 import java.awt.event.KeyAdapter;
@@ -9,6 +10,7 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
@@ -20,6 +22,7 @@ public class KeyboardController extends KeyAdapter {
     private Node sourceNode;
     private List<Node> currentPath;
     private int currentPathIndex;
+    private Map<Node, Integer> componentColors;
 
     public KeyboardController(GraphModel graph, JPanel panel, MouseController mouseController) {
         this.graph = graph;
@@ -35,6 +38,8 @@ public class KeyboardController extends KeyAdapter {
         } else if (e.getKeyCode() == KeyEvent.VK_S) {
             setSourceNode();
         } else if (e.getKeyCode() == KeyEvent.VK_C) {
+            computeComponents();
+        } else if (e.getKeyCode() == KeyEvent.VK_T) {
             checkForCycles();
         } else if (e.getKeyCode() == KeyEvent.VK_H) {
             showHelp();
@@ -48,12 +53,13 @@ public class KeyboardController extends KeyAdapter {
                 "• Click dreapta pe Nod1 apoi Nod2 = Adauga arc\n" +
                 "• Drag nod = Muta nodul\n" +
                 "• Dublu click dreapta pe nod = Sterge arcele\n\n" +
-                "ANALIZA DRUM CEL MAI SCURT:\n" +
+                "ANALIZA DRUM CEL MAI SCURT (graf orientat):\n" +
                 "1. Click stanga pe un nod (devine GALBEN)\n" +
                 "2. Apasa 'S' = Stabileste nodul sursa\n" +
                 "3. Apasa 'SPATIU' = Vezi drumurile cele mai scurte\n\n" +
                 "ALTE COMENZI:\n" +
-                "• 'C' = Verifica circuite\n" +
+                "• 'C' = Calculeaza componente conexe/tare-conexe\n" +
+                "• 'T' = Verifica circuite (graf orientat)\n" +
                 "• 'H' = Afiseaza acest ajutor\n\n" +
                 "CULORI:\n" +
                 "• GALBEN = Nod selectat\n" +
@@ -61,6 +67,65 @@ public class KeyboardController extends KeyAdapter {
                 "• VERDE = Arce in drumul cel mai scurt";
 
         JOptionPane.showMessageDialog(panel, help, "Ajutor", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void computeComponents() {
+        ConnectedComponents cc = new ConnectedComponents(graph);
+        int count = cc.compute();
+        componentColors = cc.getComponentMap();
+
+        StringBuilder message = new StringBuilder();
+
+        if (graph.isDirected()) {
+            message.append("COMPONENTE TARE-CONEXE\n\n");
+            message.append("Numar componente: ").append(count).append("\n\n");
+        } else {
+            message.append("COMPONENTE CONEXE\n\n");
+            message.append("Numar componente: ").append(count).append("\n\n");
+        }
+
+        List<List<Node>> components = cc.getComponents();
+
+        for (int i = 0; i < components.size(); i++) {
+            List<Node> comp = components.get(i);
+            message.append("Componenta ").append(i + 1).append(": {");
+            for (int j = 0; j < comp.size(); j++) {
+                message.append(comp.get(j).getId());
+                if (j < comp.size() - 1) {
+                    message.append(", ");
+                }
+            }
+            message.append("}\n");
+        }
+
+        if (graph.isDirected() && count > 0) {
+            message.append("\nApasati OK pentru a vedea graful condensat.");
+        }
+
+        JOptionPane.showMessageDialog(panel, message.toString(),
+                graph.isDirected() ? "Componente Tare-Conexe" : "Componente Conexe",
+                JOptionPane.INFORMATION_MESSAGE);
+
+        if (graph.isDirected() && count > 0) {
+            GraphModel condensation = cc.buildCondensationGraph();
+            if (condensation != null) {
+                showCondensationGraph(condensation);
+            }
+        }
+
+        panel.repaint();
+    }
+
+    private void showCondensationGraph(GraphModel condensation) {
+        javax.swing.JFrame condensationFrame = new javax.swing.JFrame("Graf Condensat - Componente Tare-Conexe");
+        condensationFrame.setSize(800, 600);
+        condensationFrame.setLocationRelativeTo(panel);
+
+        org.example.io.FileManager dummyFileManager = new org.example.io.FileManager("dummy.txt");
+        org.example.ui.GraphPanel condensationPanel = new org.example.ui.GraphPanel(condensation, dummyFileManager);
+
+        condensationFrame.add(condensationPanel);
+        condensationFrame.setVisible(true);
     }
 
     private void setSourceNode() {
@@ -170,22 +235,20 @@ public class KeyboardController extends KeyAdapter {
         }
 
         TopologicalSort topoSort = new TopologicalSort(graph);
-        if (topoSort.hasCycle()) {
+        List<Node> sorted = topoSort.sort();
+        if (sorted == null) {
             JOptionPane.showMessageDialog(panel,
-                "✗ Graful CONTINE circuite!\n\n" +
+                "\u2717 Graful CONTINE circuite!\n\n" +
                 "Sortarea topologica nu este posibila.\n" +
                 "Drumurile cele mai scurte nu pot fi calculate.",
                 "Circuit Detectat",
                 JOptionPane.ERROR_MESSAGE);
         } else {
-            List<Node> sorted = topoSort.sort();
-            StringBuilder sb = new StringBuilder("✓ Graful NU contine circuite!\n\n");
+            StringBuilder sb = new StringBuilder("\u2713 Graful NU contine circuite!\n\n");
             sb.append("Sortare topologica: ");
             for (int i = 0; i < sorted.size(); i++) {
                 sb.append(sorted.get(i).getId());
-                if (i < sorted.size() - 1) {
-                    sb.append(", ");
-                }
+                if (i < sorted.size() - 1) sb.append(", ");
             }
             sb.append("\n\nPuteti calcula drumuri cele mai scurte!");
             JOptionPane.showMessageDialog(panel, sb.toString(),
@@ -201,5 +264,8 @@ public class KeyboardController extends KeyAdapter {
     public Node getSourceNode() {
         return sourceNode;
     }
-}
 
+    public Map<Node, Integer> getComponentColors() {
+        return componentColors;
+    }
+}
