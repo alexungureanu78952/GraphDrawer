@@ -39,6 +39,8 @@ public class ConnectedComponents {
         Set<Node> processed = new HashSet<>();
         components = new ArrayList<>();
 
+        Map<Node, Integer> nextIndex = new HashMap<>();
+
         Node startNode = unvisited.iterator().next();
         unvisited.remove(startNode);
         processing.addLast(startNode);
@@ -51,7 +53,7 @@ public class ConnectedComponents {
             while (!processing.isEmpty()) {
                 Node currentNode = processing.peekLast();
 
-                Node neighbor = findNeighborInSet(currentNode, unvisited);
+                Node neighbor = findNeighborInSet(currentNode, unvisited, nextIndex);
                 if (neighbor != null) {
                     unvisited.remove(neighbor);
                     processing.addLast(neighbor);
@@ -81,12 +83,18 @@ public class ConnectedComponents {
         return componentCount;
     }
 
-    private Node findNeighborInSet(Node node, Set<Node> targetSet) {
-        for (Node neighbor : graph.getSuccessors(node)) {
+    private Node findNeighborInSet(Node node, Set<Node> targetSet, Map<Node, Integer> nextIndex) {
+        List<Node> successors = graph.getSuccessors(node);
+        int idx = nextIndex.getOrDefault(node, 0);
+        while (idx < successors.size()) {
+            Node neighbor = successors.get(idx);
+            idx++;
             if (targetSet.contains(neighbor)) {
+                nextIndex.put(node, idx);
                 return neighbor;
             }
         }
+        nextIndex.put(node, idx);
         return null;
     }
 
